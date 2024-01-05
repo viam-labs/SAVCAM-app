@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:viam_sdk/protos/component/generic.dart';
 import 'package:viam_sdk/viam_sdk.dart';
 import 'package:viam_sdk/widgets.dart';
 import 'package:image/image.dart' as img;
@@ -174,6 +175,17 @@ class _MyHomePageState extends State<MyHomePage> {
       for (ResourceName c in cameras) {
         _imageData[c.name] = defaultCamIcon;
         timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(c.name, Camera.fromRobot(_robot, c.name)));
+      }
+    
+      // default to "event-manager"
+      final eventManagers = _robot.resourceNames.where((element) => (element.name == dotenv.env['EVENT-MANAGER']) || (element.name == "event-manager"));
+      final eventManager = eventManagers.firstOrNull;
+      if (eventManager != null) { 
+        final em = Generic.fromRobot(_robot, eventManager.name);
+        final alertFut = em.doCommand({"get_triggered": {"number": 5}});
+        alertFut.then((value) {
+          print(value);
+        });
       }
 
       setState(() {

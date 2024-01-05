@@ -75,19 +75,6 @@ class _StreamScreenState extends State<StreamScreen> {
       body: Center(
         child: ListView(
           children: [
-            const SizedBox(height: 8),
-            PlatformText(
-              '${widget.resourceName.namespace}:${widget.resourceName.type}:${widget.resourceName.subtype}/${widget.resourceName.name}',
-              style: const TextStyle(fontWeight: FontWeight.w300),
-            ),
-            const SizedBox(height: 8),
-            PlatformElevatedButton(
-              child: const Text('Get image'),
-              onPressed: () => _getImage(),
-            ),
-            const SizedBox(height: 8),
-            if (_imgLoaded) Image.memory(Uint8List.view(imageBytes!.buffer), scale: 3),
-            const SizedBox(height: 8),
             ViamCameraStreamView(camera: widget.camera, streamClient: widget.robot.getStream(widget.resourceName.name)),
       
           ],
