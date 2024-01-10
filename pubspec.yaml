@@ -18,9 +18,7 @@ dependencies:
 
 dependency_overrides:
   viam_sdk:
-    git:
-      url: https://github.com/viamrobotics/viam-flutter-sdk.git
-      ref: main
+    path: /Users/mcvella/git/viam-flutter-sdk
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

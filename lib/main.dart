@@ -84,6 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _loading = false;
   final Map<String,ByteData?> _imageData = {};
   final List<ResourceName> _resourceNames = [];
+  final List<Map> _Triggered = [];
   late RobotClient _robot;
   Timer? timer;
 
@@ -130,8 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
       return uiImage;
     }
 
-    void _getImage(name, camera) {
-      final imageFut = camera.image();
+    void _getImage(String name, Camera camera, String? dir) {
+      final imageFut = (dir == null) ? camera.image() : camera.image(mimeType: MimeType.jpeg, extra:{"dir": dir});
       imageFut.then((value) {
         try {
           final convertFut = convertImageToFlutterUi(value.image ?? img.Image.empty());
@@ -139,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             final pngFut = value.toByteData(format: ui.ImageByteFormat.png);
             pngFut.then((value) => setState(() {
               _imageData[name] = value;
-              print("Got image");
+              print("Got image " + name);
             }));
           });
         }
@@ -174,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final defaultCamIcon = await rootBundle.load('web/icons/camera.png');
       for (ResourceName c in cameras) {
         _imageData[c.name] = defaultCamIcon;
-        timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(c.name, Camera.fromRobot(_robot, c.name)));
+        timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) => _getImage(c.name, Camera.fromRobot(_robot, c.name), null));
       }
     
       // default to "event-manager"
@@ -182,9 +183,19 @@ class _MyHomePageState extends State<MyHomePage> {
       final eventManager = eventManagers.firstOrNull;
       if (eventManager != null) { 
         final em = Generic.fromRobot(_robot, eventManager.name);
-        final alertFut = em.doCommand({"get_triggered": {"number": 5}});
-        alertFut.then((value) {
-          print(value);
+        final triggeredFut = em.doCommand({"get_triggered": {"number": 5}});
+        triggeredFut.then((value) {
+          for (Map triggered in value["triggered"]) {
+            // below is commented out for now until extra params can be passed to the camera
+            //timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]));
+            _imageData[triggered["id"]] = defaultCamIcon;
+            final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
+            final commandFut = cam.doCommand({'set': {'dir': triggered["id"], 'index_reset': true, 'index_jog': -1}});
+            commandFut.then((value) {
+              _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]);
+            });
+            _Triggered.add(triggered);
+          }
         });
       }
 
@@ -218,6 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ? SingleChildScrollView(
               physics: const ScrollPhysics(),
               child: Column( children: <Widget>[
+                const SizedBox(width: 5, height: 15),
                 GestureDetector(
                   child: Row(children: [
                     const SizedBox(width: 5, height: 5),
@@ -256,7 +268,51 @@ class _MyHomePageState extends State<MyHomePage> {
                     ]);
                   },
                   padding: EdgeInsets.zero,
-            )] ))
+                ),
+                const SizedBox(width: 5, height: 15),
+                GestureDetector(
+                  child: Row(children: [
+                    const SizedBox(width: 5, height: 5),
+                    const Text('Triggered Alerts', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 10),
+                    SizedBox(height: 20, child: Image.asset('web/icons/gear.png'))
+                  ]
+                  ),
+                  onTap: () {
+                    
+                  }     
+                ),
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: _Triggered.length,
+                  itemBuilder: (context, index) {
+                    final triggered = _Triggered[index];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const SizedBox(width: 5, height: 5),
+                        GestureDetector( 
+                          child: SizedBox(
+                            height: 80,
+                            child: Image.memory(Uint8List.view(_imageData[triggered['id']]!.buffer), width: 150, gaplessPlayback: true)
+                          ),
+                          //onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName)!)),
+                        ),
+                        PlatformListTile(
+                          title: Text(triggered['event'] + " (" + triggered["camera"] + ")"),
+                          subtitle: Text(DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()),
+                          trailing: Icon(context.platformIcons.rightChevron),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(triggered['id'])!)),
+                        ),
+                        const Divider(height: 0, indent: 0, endIndent: 0)
+                    ]);
+                  },
+                  padding: EdgeInsets.zero,
+                ),
+              ] 
+          )
+        )
           : const Center(
               child: Text("Authenticating...")
             ),
