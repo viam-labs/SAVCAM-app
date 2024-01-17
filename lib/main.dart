@@ -149,6 +149,23 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     }
+
+    void _getTriggered(em) {
+      final triggeredFut = em.doCommand({"get_triggered": {"number": 5}});
+      triggeredFut.then((value) {
+        _Triggered.clear();
+        for (Map triggered in value["triggered"]) {
+          // below is commented out for now until extra params can be passed to the camera
+          //timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]));
+          final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
+          final commandFut = cam.doCommand({'set': {'dir': triggered["id"], 'index_reset': true, 'index_jog': -1}});
+          commandFut.then((value) {
+            _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]);
+          });
+          _Triggered.add(triggered);
+        }
+      });
+    }
     
     Future<RobotClient> robotFut;
 
@@ -183,20 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final eventManager = eventManagers.firstOrNull;
       if (eventManager != null) { 
         final em = Generic.fromRobot(_robot, eventManager.name);
-        final triggeredFut = em.doCommand({"get_triggered": {"number": 5}});
-        triggeredFut.then((value) {
-          for (Map triggered in value["triggered"]) {
-            // below is commented out for now until extra params can be passed to the camera
-            //timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]));
-            _imageData[triggered["id"]] = defaultCamIcon;
-            final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
-            final commandFut = cam.doCommand({'set': {'dir': triggered["id"], 'index_reset': true, 'index_jog': -1}});
-            commandFut.then((value) {
-              _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]);
-            });
-            _Triggered.add(triggered);
-          }
-        });
+        timer = Timer.periodic(const Duration(seconds: 2), (Timer t) => _getTriggered(em));
       }
 
       setState(() {
@@ -269,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   padding: EdgeInsets.zero,
                 ),
-                const SizedBox(width: 5, height: 15),
+                const SizedBox(width: 5, height: 25),
                 GestureDetector(
                   child: Row(children: [
                     const SizedBox(width: 5, height: 5),
