@@ -1,17 +1,20 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:viam_sdk/viam_sdk.dart';
-import 'package:viam_sdk/widgets.dart';
 
 class StreamScreen extends StatefulWidget {
   final Camera camera;
   final RobotClient robot;
   final ResourceName resourceName;
-  const StreamScreen({super.key, required this.camera, required this.robot, required this.resourceName});
+  final String title;
+  final String dir;
+  const StreamScreen({super.key, required this.camera, required this.robot, required this.resourceName, required this.title, this.dir=""});
 
   @override
   State<StreamScreen> createState() {
@@ -20,26 +23,9 @@ class StreamScreen extends StatefulWidget {
 }
 
 class _StreamScreenState extends State<StreamScreen> {
-  // Single frame
   ByteData? imageBytes;
-  bool _imgLoaded = false;
-
-  void _getImage() {
-    setState(() {
-      _imgLoaded = false;
-    });
-    final imageFut = widget.camera.image();
-    imageFut.then((value) {
-      final convertFut = convertImageToFlutterUi(value.image ?? img.Image.empty());
-      convertFut.then((value) {
-        final pngFut = value.toByteData(format: ui.ImageByteFormat.png);
-        pngFut.then((value) => setState(() {
-              imageBytes = value;
-              _imgLoaded = true;
-            }));
-      });
-    });
-  }
+  Timer? timer;
+  bool _isLoaded = false;
 
   Future<ui.Image> convertImageToFlutterUi(img.Image image) async {
     if (image.format != img.Format.uint8 || image.numChannels != 4) {
@@ -65,21 +51,77 @@ class _StreamScreenState extends State<StreamScreen> {
     return uiImage;
   }
 
+  void _getImage(String name, Camera camera, String? dir) {
+    final imageFut = (dir == null) ? camera.image() : camera.image( extra:{"dir": dir});
+    imageFut.then((value) {
+      try {
+        final convertFut = convertImageToFlutterUi(value.image ?? img.Image.empty());
+        convertFut.then((value) {
+          final pngFut = value.toByteData(format: ui.ImageByteFormat.png);
+          pngFut.then((value) => setState(() {
+            imageBytes = value;
+          }));
+        });
+      }
+      catch (e) {
+          print(e);
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future<ByteData> camIconFut;
+    camIconFut = rootBundle.load('web/icons/camera.png');
+    camIconFut.then((value) async {
+      imageBytes = value;
+      timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) => _getImage(widget.resourceName.name, widget.camera, widget.dir));
+      setState(() {
+        _isLoaded = true;
+      });
+    });
+  }
+
+  @override
+  void dispose(){
+    timer!.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text(widget.resourceName.name.toUpperCase()),
+        title: Text(widget.title, style: const TextStyle(fontSize: 13)),
       ),
       iosContentPadding: true,
-      body: Center(
+      body: _isLoaded ? Center(
         child: ListView(
           children: [
-            ViamCameraStreamView(camera: widget.camera, streamClient: widget.robot.getStream(widget.resourceName.name)),
-      
+            SizedBox(
+              height: 300,
+              child: Image.memory(Uint8List.view(imageBytes?.buffer ?? ByteData(4).buffer), width: 300, gaplessPlayback: true)
+            ), 
+                        GestureDetector(
+              child: Row(children: [
+                    const SizedBox(width: 250),
+                    const Text('delete triggered alert', style: TextStyle(fontWeight: FontWeight.w300)),
+                    const SizedBox(width: 10),
+                    SizedBox(height: 18, child: Image.asset('web/icons/delete.png')),
+                    const SizedBox(height: 30),
+                  ] ), 
+              onTap: () {
+                    
+              }    
+            ), 
           ],
         ),
-      ),
+      ) : const Center(
+              child: Text("Loading...")
+            ),
     );
   }
+
+  
 }

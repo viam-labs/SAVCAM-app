@@ -84,6 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _loading = false;
   final Map<String,ByteData?> _imageData = {};
   final List<ResourceName> _resourceNames = [];
+  final Map<String,ResourceName> _resourceNameStrings = {};
   final List<Map> _Triggered = [];
   late RobotClient _robot;
   Timer? timer;
@@ -132,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     void _getImage(String name, Camera camera, String? dir) {
-      final imageFut = (dir == null) ? camera.image() : camera.image(mimeType: MimeType.jpeg, extra:{"dir": dir});
+      final imageFut = (dir == null) ? camera.image() : camera.image( extra:{"dir": dir});
       imageFut.then((value) {
         try {
           final convertFut = convertImageToFlutterUi(value.image ?? img.Image.empty());
@@ -140,7 +141,6 @@ class _MyHomePageState extends State<MyHomePage> {
             final pngFut = value.toByteData(format: ui.ImageByteFormat.png);
             pngFut.then((value) => setState(() {
               _imageData[name] = value;
-              print("Got image " + name);
             }));
           });
         }
@@ -155,8 +155,6 @@ class _MyHomePageState extends State<MyHomePage> {
       triggeredFut.then((value) {
         _Triggered.clear();
         for (Map triggered in value["triggered"]) {
-          // below is commented out for now until extra params can be passed to the camera
-          //timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]));
           final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
           final commandFut = cam.doCommand({'set': {'dir': triggered["id"], 'index_reset': true, 'index_jog': -1}});
           commandFut.then((value) {
@@ -207,17 +205,14 @@ class _MyHomePageState extends State<MyHomePage> {
         _loggedIn = true;
         _loading = false;
         _resourceNames.addAll(cameras);
+        _resourceNames.forEach((n) => _resourceNameStrings[n.name] = n);
       });
     });
   }
 
-  StreamClient _getStream(ResourceName name) {
-    return _robot.getStream(name.name);
-  }
-
-  Widget? _getScreen(ResourceName rname) {
+  Widget? _getScreen(ResourceName rname, String title, [String dir=""]) {
     if (rname.subtype == Camera.subtype.resourceSubtype) {
-      return StreamScreen(camera: Camera.fromRobot(_robot, rname.name), robot: _robot, resourceName: rname);
+      return StreamScreen(camera: Camera.fromRobot(_robot, rname.name), robot: _robot, resourceName: rname, title: title, dir: dir);
     }
     return null;
   }
@@ -261,12 +256,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             height: 80,
                             child: Image.memory(Uint8List.view(_imageData[resourceName.name]!.buffer), width: 150, gaplessPlayback: true)
                           ),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName)!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName, "${resourceName.name} live stream")!)),
                         ),
                         PlatformListTile(
                           title: Text(resourceName.name),
                           trailing: Icon(context.platformIcons.rightChevron),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName)!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName, "${resourceName.name} live stream")!)),
                         ),
                         const Divider(height: 0, indent: 0, endIndent: 0)
                     ]);
@@ -279,7 +274,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(width: 5, height: 5),
                     const Text('Triggered Alerts', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(width: 10),
-                    SizedBox(height: 20, child: Image.asset('web/icons/gear.png'))
+                    SizedBox(height: 20, child: Image.asset('web/icons/gear.png')),
                   ]
                   ),
                   onTap: () {
@@ -299,15 +294,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         GestureDetector( 
                           child: SizedBox(
                             height: 80,
-                            child: Image.memory(Uint8List.view(_imageData[triggered['id']]!.buffer), width: 150, gaplessPlayback: true)
+                            child: Image.memory(Uint8List.view(_imageData[triggered['id']]?.buffer ?? ByteData.sublistView(Uint8List(4)).buffer), width: 150, gaplessPlayback: true)
                           ),
-                          //onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(resourceName)!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(_resourceNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
                         ),
                         PlatformListTile(
                           title: Text(triggered['event'] + " (" + triggered["camera"] + ")"),
                           subtitle: Text(DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()),
                           trailing: Icon(context.platformIcons.rightChevron),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(triggered['id'])!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getScreen(_resourceNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
                         ),
                         const Divider(height: 0, indent: 0, endIndent: 0)
                     ]);
