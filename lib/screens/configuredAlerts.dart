@@ -25,7 +25,7 @@ class ConfiguredAlertsScreen extends StatefulWidget {
 class _ConfiguredAlertsScreenState extends State<ConfiguredAlertsScreen> {
   bool _isLoaded = false;
   final List<ResourceName> _alertNames = [];
-  late Object _partConfig;
+  late RobotPart _partConfig;
 
   @override
   void initState() {
@@ -33,6 +33,7 @@ class _ConfiguredAlertsScreenState extends State<ConfiguredAlertsScreen> {
     final partFut = getPart();
     partFut.then((part) async {
       print(part.robotConfig.toString());
+      _partConfig = part;
       _isLoaded = true;
     });
   }

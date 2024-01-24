@@ -155,13 +155,10 @@ class _MyHomePageState extends State<MyHomePage> {
     void _getTriggered(em) {
       final triggeredFut = em.doCommand({"get_triggered": {"number": 5}});
       triggeredFut.then((value) {
+        final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
         _Triggered.clear();
         for (Map triggered in value["triggered"]) {
-          final cam = Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!);
-          final commandFut = cam.doCommand({'set': {'dir': triggered["id"], 'index_reset': true, 'index_jog': -1}});
-          commandFut.then((value) {
-            _getImage(triggered["id"], Camera.fromRobot(_robot, dotenv.env['DIR_CAM']!), triggered["id"]);
-          });
+            _getImage(triggered["id"], cam, triggered["id"]);
           _Triggered.add(triggered);
         }
       });
@@ -190,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     robotFut.then((value) async {
       _robot = value;
-      final cameras = _robot.resourceNames.where((element) => element.subtype == Camera.subtype.resourceSubtype);
+      final cameras = _robot.resourceNames.where((element)  {_resourceNameStrings[element.name] = element; return (element.subtype == Camera.subtype.resourceSubtype) && (element.name != dotenv.env['DIR_CAM']);});
       final defaultCamIcon = await rootBundle.load('web/icons/camera.png');
       for (ResourceName c in cameras) {
         _imageData[c.name] = defaultCamIcon;
@@ -202,14 +199,13 @@ class _MyHomePageState extends State<MyHomePage> {
       final eventManager = eventManagers.firstOrNull;
       if (eventManager != null) { 
         final em = Generic.fromRobot(_robot, eventManager.name);
-        timer = Timer.periodic(const Duration(seconds: 2), (Timer t) => _getTriggered(em));
+        timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) => _getTriggered(em));
       }
 
       setState(() {
         _loggedIn = true;
         _loading = false;
         _resourceNames.addAll(cameras);
-        _resourceNames.forEach((n) => _resourceNameStrings[n.name] = n);
       });
     });
   }
@@ -239,11 +235,9 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column( children: <Widget>[
                 const SizedBox(width: 5, height: 15),
                 GestureDetector(
-                  child: Row(children: [
-                    const SizedBox(width: 5, height: 5),
-                    const Text('Cameras', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 10),
-                    SizedBox(height: 20, child: Image.asset('web/icons/gear.png'))
+                  child: const Row(children: [
+                    SizedBox(width: 5, height: 5),
+                    Text('Cameras', textAlign: TextAlign.start, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
                   ]
                   ),
                   onTap: () {
@@ -281,9 +275,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Row(children: [
                     const SizedBox(width: 5, height: 5),
-                    const Text('Triggered Alerts', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Triggered Alerts', textAlign: TextAlign.start, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 10),
-                    SizedBox(height: 20, child: Image.asset('web/icons/gear.png')),
+                    SizedBox(height: 24, child: Image.asset('web/icons/gear.png')),
                   ]
                   ),
                   onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfiguredAlerts()!)),
