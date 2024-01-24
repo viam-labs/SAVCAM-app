@@ -88,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<Map> _Triggered = [];
   late RobotClient _robot;
   late Viam _app;
+  late Generic _eventManager;
 
   Timer? timer;
 
@@ -198,8 +199,8 @@ class _MyHomePageState extends State<MyHomePage> {
       final eventManagers = _robot.resourceNames.where((element) => (element.name == dotenv.env['EVENT-MANAGER']) || (element.name == "event-manager"));
       final eventManager = eventManagers.firstOrNull;
       if (eventManager != null) { 
-        final em = Generic.fromRobot(_robot, eventManager.name);
-        timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) => _getTriggered(em));
+        _eventManager =  Generic.fromRobot(_robot, eventManager.name);
+        timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) => _getTriggered(_eventManager));
       }
 
       setState(() {
@@ -215,10 +216,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget? _getStream(ResourceName rname, String title, [String dir=""]) {
-    if (rname.subtype == Camera.subtype.resourceSubtype) {
-      return StreamScreen(camera: Camera.fromRobot(_robot, rname.name), robot: _robot, resourceName: rname, title: title, dir: dir);
-    }
-    return null;
+    return StreamScreen(camera: Camera.fromRobot(_robot, rname.name), robot: _robot, resourceName: rname, title: title, dir: dir, eventManager: _eventManager);
   }
 
 
@@ -275,14 +273,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 GestureDetector(
                   child: Row(children: [
                     const SizedBox(width: 5, height: 5),
-                    const Text('Triggered Alerts', textAlign: TextAlign.start, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text('Alerts', textAlign: TextAlign.start, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 10),
                     SizedBox(height: 24, child: Image.asset('web/icons/gear.png')),
                   ]
                   ),
                   onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfiguredAlerts()!)),
                 ),
-                ListView.builder(
+                _Triggered.isNotEmpty ? ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   itemCount: _Triggered.length,
@@ -309,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ]);
                   },
                   padding: EdgeInsets.zero,
-                ),
+                ) : const Text("No triggered events"),
               ] 
           )
         )

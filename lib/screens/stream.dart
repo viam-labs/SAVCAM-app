@@ -14,7 +14,9 @@ class StreamScreen extends StatefulWidget {
   final ResourceName resourceName;
   final String title;
   final String dir;
-  const StreamScreen({super.key, required this.camera, required this.robot, required this.resourceName, required this.title, this.dir=""});
+  final Generic eventManager;
+
+  const StreamScreen({super.key, required this.camera, required this.robot, required this.resourceName, required this.title, this.dir="", required this.eventManager});
 
   @override
   State<StreamScreen> createState() {
@@ -114,8 +116,9 @@ class _StreamScreenState extends State<StreamScreen> {
                     const SizedBox(height: 30),
                   ]
                   ] ), 
-              onTap: () {
-                    
+              onTap: () async {
+                await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
+                Navigator.pop(context);
               }    
             ), 
           ],
