@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
@@ -6,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:viam_sdk/protos/app/app.dart';
 import 'package:viam_sdk/protos/component/generic.dart';
 import 'package:viam_sdk/viam_sdk.dart';
+import 'package:viam_sdk/src/utils.dart';
 import 'package:viam_sdk/widgets.dart';
 import 'package:image/image.dart' as img;
 import 'dart:ui' as ui;
@@ -89,8 +92,26 @@ class _MyHomePageState extends State<MyHomePage> {
   late RobotClient _robot;
   late Viam _app;
   late Generic _eventManager;
+  late RobotPart Part;
+  late Map PartComponentMap = {};
+  List<bool> ModeState = [true, false];
 
   Timer? timer;
+
+  void _setModeState(String mode, [bool save=false]) {
+      if (mode == 'away') {
+        ModeState = [false, true];
+      } else {
+        ModeState = [true, false];
+      }
+      PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']['mode'] = mode;
+      if(save) {
+        _saveConfig();
+      }
+  }
+
+  void _saveConfig() {
+  }
 
   // automatically login with credentials from .env
   @override
@@ -110,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _loading = true;
     });
-
+    
     Future<ui.Image> convertImageToFlutterUi(img.Image image) async {
       if (image.format != img.Format.uint8 || image.numChannels != 4) {
         final cmd = img.Command()
@@ -164,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     }
-    
+
     Future<Viam> appFut;
     Future<RobotClient> robotFut;
 
@@ -184,6 +205,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
     appFut.then((value) async {
       _app = value;
+      Future<RobotPart> partFut;
+      partFut = _app.appClient.getRobotPart(dotenv.env['PART_ID']!);
+      partFut.then((part) async {
+        Part = part;
+        var components = part.robotConfig.fields['components']!.toPrimitive();
+        var index = 0;
+        components.forEach((component) {
+          PartComponentMap[component['name']] = component;
+          index = index + 1;
+        });
+        _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']['mode']);
+      });
     });
 
     robotFut.then((value) async {
@@ -196,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     
       // default to "event-manager"
-      final eventManagers = _robot.resourceNames.where((element) => (element.name == dotenv.env['EVENT-MANAGER']) || (element.name == "event-manager"));
+      final eventManagers = _robot.resourceNames.where((element) => (element.name == dotenv.env['EVENT_MANAGER']) || (element.name == "event-manager"));
       final eventManager = eventManagers.firstOrNull;
       if (eventManager != null) { 
         _eventManager =  Generic.fromRobot(_robot, eventManager.name);
@@ -212,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget? _getConfiguredAlerts() {
-    return ConfiguredAlertsScreen(app: _app, partId: dotenv.env['PART_ID'] ?? '');
+    return ConfiguredAlertsScreen(app: _app, part: PartComponentMap);
   }
 
   Widget? _getStream(ResourceName rname, String title, [String dir=""]) {
@@ -232,6 +265,26 @@ class _MyHomePageState extends State<MyHomePage> {
               physics: const ScrollPhysics(),
               child: Column( children: <Widget>[
                 const SizedBox(width: 5, height: 15),
+                ToggleButtons(
+                  direction: Axis.horizontal,
+                onPressed: (int index) {
+                  _setModeState(index == 0 ? 'home' : 'away', true);
+                },
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                selectedBorderColor: Colors.blue[700],
+                selectedColor: Colors.white,
+                fillColor: Colors.blue[200],
+                color: Colors.blue[400],
+                constraints: const BoxConstraints(
+                  minHeight: 40.0,
+                  minWidth: 80.0,
+                ),
+                isSelected: ModeState,
+                children: const [
+                  Text('Home'),
+                  Text('Away')
+                ],
+              ),
                 GestureDetector(
                   child: const Row(children: [
                     SizedBox(width: 5, height: 5),

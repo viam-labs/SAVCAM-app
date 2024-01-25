@@ -13,8 +13,8 @@ import 'package:viam_sdk/viam_sdk.dart';
 
 class ConfiguredAlertsScreen extends StatefulWidget {
   final Viam app;
-  final String partId;
-  const ConfiguredAlertsScreen({super.key, required this.app, required this.partId});
+  final Map part;
+  const ConfiguredAlertsScreen({super.key, required this.app, required this.part});
 
   @override
   State<ConfiguredAlertsScreen> createState() {
@@ -25,22 +25,10 @@ class ConfiguredAlertsScreen extends StatefulWidget {
 class _ConfiguredAlertsScreenState extends State<ConfiguredAlertsScreen> {
   bool _isLoaded = false;
   final List<ResourceName> _alertNames = [];
-  late RobotPart _partConfig;
 
   @override
   void initState() {
     super.initState();
-    final partFut = getPart();
-    partFut.then((part) async {
-      print(part.robotConfig.toString());
-      _partConfig = part;
-      _isLoaded = true;
-    });
-  }
-
-  Future<RobotPart> getPart() async {
-    final part = await widget.app.appClient.getRobotPart(widget.partId);
-    return part;
   }
 
   @override
