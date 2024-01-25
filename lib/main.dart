@@ -111,6 +111,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _saveConfig() {
+    var robotConfig = Part.robotConfig.toMap();
+    List componentList = PartComponentMap.entries.map( (component) => component.value).toList();
+    robotConfig['components'] = componentList;
+    var setRobotConfig = robotConfig.toStruct();
+    _app.appClient.updateRobotPart(dotenv.env['PART_ID']!, Part.name, setRobotConfig);
+    Part.robotConfig = setRobotConfig;
   }
 
   // automatically login with credentials from .env
