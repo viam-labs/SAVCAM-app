@@ -101,25 +101,21 @@ class _StreamScreenState extends State<StreamScreen> {
       body: _isLoaded ? Center(
         child: ListView(
           children: [
-            SizedBox(
-              height: 400,
-              child: Image.memory(Uint8List.view(imageBytes?.buffer ?? ByteData(4).buffer), width: 400, gaplessPlayback: true)
-            ), 
-              GestureDetector(
+            GestureDetector(
                 child: Row(children: [
                   if (widget.dir != "") ...[
-                    const SizedBox(height: 50),
-                    const SizedBox(width: 200),
-                    SizedBox(height: 24, child: Image.asset('web/icons/delete.png')),
-                    const SizedBox(width: 5),
-                    const Text('delete triggered alert', style: TextStyle(fontWeight: FontWeight.w400, fontSize: 18)),
-                    const SizedBox(height: 30),
+                    Expanded( child: Align( alignment: Alignment.topRight, child: SizedBox(height: 24, child: Image.asset('web/icons/delete.png')))),
+                    const SizedBox(width: 45, height: 25),
                   ]
                   ] ), 
               onTap: () async {
                 await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
                 Navigator.pop(context);
               }    
+            ), 
+            SizedBox(
+              height: 400,
+              child: Image.memory(Uint8List.view(imageBytes?.buffer ?? ByteData(4).buffer), width: 400, gaplessPlayback: true)
             ), 
           ],
         ),

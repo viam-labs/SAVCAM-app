@@ -10,49 +10,69 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:viam_sdk/src/gen/app/v1/app.pb.dart';
 import 'package:viam_sdk/viam_sdk.dart';
+import 'screens.dart';
 
-class ConfiguredAlertsScreen extends StatefulWidget {
+class ConfiguredEventsScreen extends StatefulWidget {
   final Viam app;
-  final Map part;
-  const ConfiguredAlertsScreen({super.key, required this.app, required this.part});
+  final Map components;
+  final Map services;
+  final Map emAttributes;
+  const ConfiguredEventsScreen({super.key, required this.app, required this.components, required this.services, required this.emAttributes});
 
   @override
-  State<ConfiguredAlertsScreen> createState() {
-    return _ConfiguredAlertsScreenState();
+  State<ConfiguredEventsScreen> createState() {
+    return _ConfiguredEventsScreenState();
   }
 }
 
-class _ConfiguredAlertsScreenState extends State<ConfiguredAlertsScreen> {
+class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
   bool _isLoaded = false;
-  final List<ResourceName> _alertNames = [];
 
   @override
   void initState() {
     super.initState();
+    _isLoaded = true;
   }
-
+  
   @override
   void dispose(){
     super.dispose();
+  }
+  Widget? _getConfigureEvent(Map eventConfig) {
+    return ConfigureEventScreen(app: widget.app, components: widget.components, services: widget.services, eventConfig: eventConfig);
   }
 
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: const Text("Configured Alerts", style: TextStyle(fontSize: 13)),
+        title: const Text("Event Configuration", style: TextStyle(fontSize: 13)),
       ),
       iosContentPadding: true,
       body: _isLoaded
           ? SingleChildScrollView(
               physics: const ScrollPhysics(),
               child: Column( children: <Widget>[
+              const SizedBox(height: 25),
+              GestureDetector(
+                child: Row(children: [
+                  Expanded(
+                      child: Align(
+                          alignment: Alignment.topRight,
+                          child: SizedBox(
+                              height: 32,
+                              child: Image.asset('web/icons/plus.png')))),
+                  const SizedBox(width: 25),
+                ]),
+                onTap: () async {
+                  //await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
+                  Navigator.pop(context);
+                }),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: _alertNames.length,
+                  itemCount: widget.emAttributes['events'].length,
                   itemBuilder: (context, index) {
-                    final resourceName = _alertNames[index];
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -61,12 +81,12 @@ class _ConfiguredAlertsScreenState extends State<ConfiguredAlertsScreen> {
                           child: const SizedBox(
                             height: 80,
                           ),
-                          //onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(resourceName, "${resourceName.name} live stream")!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(widget.emAttributes['events'][index])!)),
                         ),
                         PlatformListTile(
-                          title: Text(resourceName.name),
+                          title: Text(widget.emAttributes['events'][index]['name']),
                           trailing: Icon(context.platformIcons.rightChevron),
-                          //onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(resourceName, "${resourceName.name} live stream")!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(widget.emAttributes['events'][index])!)),
                         ),
                         const Divider(height: 0, indent: 0, endIndent: 0)
                     ]);

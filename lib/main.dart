@@ -86,14 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _loggedIn = false;
   bool _loading = false;
   final Map<String,ByteData?> _imageData = {};
-  final List<ResourceName> _resourceNames = [];
-  final Map<String,ResourceName> _resourceNameStrings = {};
+  final List<ResourceName> _cameraNames = [];
+  final Map<String,ResourceName> _cameraNameStrings = {};
   final List<Map> _Triggered = [];
   late RobotClient _robot;
   late Viam _app;
   late Generic _eventManager;
   late RobotPart Part;
   late Map PartComponentMap = {};
+  late Map PartServiceMap = {};
   List<bool> ModeState = [true, false];
 
   Timer? timer;
@@ -221,13 +222,19 @@ class _MyHomePageState extends State<MyHomePage> {
           PartComponentMap[component['name']] = component;
           index = index + 1;
         });
+        var services = part.robotConfig.fields['services']!.toPrimitive();
+        index = 0;
+        services.forEach((service) {
+          PartServiceMap[service['name']] = service;
+          index = index + 1;
+        });
         _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']['mode']);
       });
     });
 
     robotFut.then((value) async {
       _robot = value;
-      final cameras = _robot.resourceNames.where((element)  {_resourceNameStrings[element.name] = element; return (element.subtype == Camera.subtype.resourceSubtype) && (element.name != dotenv.env['DIR_CAM']);});
+      final cameras = _robot.resourceNames.where((element)  {_cameraNameStrings[element.name] = element; return (element.subtype == Camera.subtype.resourceSubtype) && (element.name != dotenv.env['DIR_CAM']);});
       final defaultCamIcon = await rootBundle.load('web/icons/camera.png');
       for (ResourceName c in cameras) {
         _imageData[c.name] = defaultCamIcon;
@@ -245,13 +252,13 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _loggedIn = true;
         _loading = false;
-        _resourceNames.addAll(cameras);
+        _cameraNames.addAll(cameras);
       });
     });
   }
 
-  Widget? _getConfiguredAlerts() {
-    return ConfiguredAlertsScreen(app: _app, part: PartComponentMap);
+  Widget? _getConfiguredEvents() {
+    return ConfiguredEventsScreen(app: _app, components: PartComponentMap, services: PartServiceMap, emAttributes: PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']);
   }
 
   Widget? _getStream(ResourceName rname, String title, [String dir=""]) {
@@ -304,9 +311,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: _resourceNames.length,
+                  itemCount: _cameraNames.length,
                   itemBuilder: (context, index) {
-                    final resourceName = _resourceNames[index];
+                    final resourceName = _cameraNames[index];
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -337,7 +344,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     SizedBox(height: 24, child: Image.asset('web/icons/gear.png')),
                   ]
                   ),
-                  onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfiguredAlerts()!)),
+                  onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfiguredEvents()!)),
                 ),
                 _Triggered.isNotEmpty ? ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
@@ -354,13 +361,13 @@ class _MyHomePageState extends State<MyHomePage> {
                             height: 80,
                             child: Image.memory(Uint8List.view(_imageData[triggered['id']]?.buffer ?? ByteData.sublistView(Uint8List(4)).buffer), width: 150, gaplessPlayback: true)
                           ),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(_resourceNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(_cameraNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
                         ),
                         PlatformListTile(
                           title: Text(triggered['event'] + " (" + triggered["camera"] + ")"),
                           subtitle: Text(DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()),
                           trailing: Icon(context.platformIcons.rightChevron),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(_resourceNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getStream(_cameraNameStrings[dotenv.env['DIR_CAM']]!, "Alert Replay: ${triggered['event']} (${triggered["camera"]}) ${DateTime.fromMillisecondsSinceEpoch(int.parse(triggered['time'])*1000).toIso8601String()}", triggered['id'])!)),
                         ),
                         const Divider(height: 0, indent: 0, endIndent: 0)
                     ]);
