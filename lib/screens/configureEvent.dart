@@ -15,10 +15,13 @@ import 'screens.dart';
 class ConfigureEventScreen extends StatefulWidget {
   final Viam app;
   final Map eventConfig;
+  final int eventIndex;
   final Map components;
   final Map services;
+  final Function callback;
+
   const ConfigureEventScreen(
-      {super.key, required this.app, required this.components, required this.services, required this.eventConfig});
+      {super.key, required this.callback, required this.app, required this.components, required this.services, required this.eventConfig, required this.eventIndex});
 
   @override
   State<ConfigureEventScreen> createState() {
@@ -36,12 +39,19 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
 
   void _setModeState(String mode) {
     setState(() {
-
+      var modes = [];
       if (mode == 'home') {
         _modesState[0] = !_modesState[0];
+        if (_modesState[0]) {
+          modes.add('home');
+        }
       } else {
         _modesState[1] = !_modesState[1];
+        if (_modesState[1]) {
+          modes.add('away');
+        }
       }
+      widget.eventConfig['modes'] = modes;
     });
   }
 
@@ -55,15 +65,38 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
 
   @override
   void dispose() {
+    widget.callback(widget.eventIndex, widget.eventConfig);
     super.dispose();
   }
 
-  Widget? _getConfigureRule(Map config) {
-    return ConfigureRuleScreen(app: widget.app, components: widget.components, services: widget.services, ruleConfig: config);
+  ruleCallback(int index, Map updatedRule, [delete=false]) {
+    if (delete) {
+      widget.eventConfig['rules'].removeAt(index);
+    }
+    else {
+      widget.eventConfig['rules'][index] = updatedRule;
+    }
+    
+    widget.callback(widget.eventIndex, widget.eventConfig);
+  }
+
+  notificationCallback(int index, Map updatedNotification, [delete=false]) {
+    if (delete) {
+      widget.eventConfig['notifications'].removeAt(index);
+    }
+    else {
+      widget.eventConfig['notifications'][index] = updatedNotification;
+    }
+    
+    widget.callback(widget.eventIndex, widget.eventConfig);
+  }
+
+  Widget? _getConfigureRule(int index, Map config) {
+    return ConfigureRuleScreen(app: widget.app, components: widget.components, services: widget.services, ruleConfig: config, ruleIndex: index, callback: ruleCallback);
   }
   
-  Widget? _getConfigureNotification(Map config) {
-    return ConfigureNotificationScreen(app: widget.app, notificationConfig: config);
+  Widget? _getConfigureNotification(int index, Map config) {
+    return ConfigureNotificationScreen(app: widget.app, notificationConfig: config, notificationIndex: index, callback: notificationCallback);
   }
 
   @override
@@ -90,7 +123,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                       const SizedBox(width: 25, height: 25),
                     ]),
                     onTap: () async {
-                      //await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
+                      await widget.callback(widget.eventIndex, widget.eventConfig, true);
                       Navigator.pop(context);
                     }),
                 TextFormField(
@@ -104,6 +137,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                     }
                     return null;
                   },
+                  onChanged: (value) => widget.eventConfig['name'] = value,
                 ),
                 const SizedBox(height: 25),
                 Row(children: [
@@ -140,6 +174,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                     }
                     return null;
                   },
+                  onChanged: (value) => widget.eventConfig['debounce_interval_secs'] = int.parse(value),
                 ),
                 Row(children: [
                   const Text("Rule Logic Type:"),
@@ -157,6 +192,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                         setState(() {
                           _logicType = newValue!;
                         });
+                        widget.eventConfig['rule_logic_type'] = newValue;
                       }),
                 ]),
                 const SizedBox(height: 15),
@@ -181,7 +217,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                             child: const SizedBox(
                               height: 10,
                             ),
-                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureRule(widget.eventConfig['rules'][index])!)),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureRule(index, widget.eventConfig['rules'][index])!)),
                           ),
                           PlatformListTile(
                             title: Text(widget.eventConfig['rules'][index]['type'] +
@@ -190,7 +226,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                                 ? ''
                                 : " - " + widget.eventConfig['rules'][index]['class_regex'])),
                             trailing: Icon(context.platformIcons.rightChevron),
-                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureRule(widget.eventConfig['rules'][index])!)),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureRule(index, widget.eventConfig['rules'][index])!)),
                           ),
                           const Divider(height: 0, indent: 0, endIndent: 0)
                         ]);
@@ -219,7 +255,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                             child: const SizedBox(
                               height: 10,
                             ),
-                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureNotification(widget.eventConfig['notifications'][index])!)),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureNotification(index, widget.eventConfig['notifications'][index])!)),
                           ),
                           PlatformListTile(
                             title: Text(widget.eventConfig['notifications'][index]['type'] +
@@ -231,7 +267,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
 
                                 ),
                             trailing: Icon(context.platformIcons.rightChevron),
-                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureNotification(widget.eventConfig['notifications'][index])!)),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureNotification(index, widget.eventConfig['notifications'][index])!)),
                           ),
                           const Divider(height: 0, indent: 0, endIndent: 0)
                         ]);

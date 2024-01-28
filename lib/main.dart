@@ -257,8 +257,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  configuredEventsCallback(Map emAttributes) {
+    PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'] = emAttributes;
+    _saveConfig();
+  }
+
   Widget? _getConfiguredEvents() {
-    return ConfiguredEventsScreen(app: _app, components: PartComponentMap, services: PartServiceMap, emAttributes: PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']);
+    return ConfiguredEventsScreen(callback: configuredEventsCallback, app: _app, components: PartComponentMap, services: PartServiceMap, emAttributes: PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']);
   }
 
   Widget? _getStream(ResourceName rname, String title, [String dir=""]) {

@@ -17,7 +17,9 @@ class ConfiguredEventsScreen extends StatefulWidget {
   final Map components;
   final Map services;
   final Map emAttributes;
-  const ConfiguredEventsScreen({super.key, required this.app, required this.components, required this.services, required this.emAttributes});
+  final Function callback;
+
+  const ConfiguredEventsScreen({super.key, required this.callback, required this.app, required this.components, required this.services, required this.emAttributes});
 
   @override
   State<ConfiguredEventsScreen> createState() {
@@ -38,8 +40,19 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
   void dispose(){
     super.dispose();
   }
-  Widget? _getConfigureEvent(Map eventConfig) {
-    return ConfigureEventScreen(app: widget.app, components: widget.components, services: widget.services, eventConfig: eventConfig);
+
+  configureEventCallback(int index, Map updatedEvent, [delete=false]) {
+    if (delete) {
+      widget.emAttributes['events'].removeAt(index);
+    }
+    else {
+      widget.emAttributes['events'][index] = updatedEvent;
+    }
+    widget.callback(widget.emAttributes);
+  }
+
+  Widget? _getConfigureEvent(int index, Map eventConfig) {
+    return ConfigureEventScreen(callback: configureEventCallback, app: widget.app, components: widget.components, services: widget.services, eventConfig: eventConfig, eventIndex: index);
   }
 
   @override
@@ -81,12 +94,12 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
                           child: const SizedBox(
                             height: 80,
                           ),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(widget.emAttributes['events'][index])!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
                         ),
                         PlatformListTile(
                           title: Text(widget.emAttributes['events'][index]['name']),
                           trailing: Icon(context.platformIcons.rightChevron),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(widget.emAttributes['events'][index])!)),
+                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
                         ),
                         const Divider(height: 0, indent: 0, endIndent: 0)
                     ]);

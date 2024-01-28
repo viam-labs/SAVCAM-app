@@ -21,8 +21,11 @@ class ConfigureRuleScreen extends StatefulWidget {
   final Map components;
   final Map services;
   final Map ruleConfig;
+  final int ruleIndex;
+  final Function callback;
+
   const ConfigureRuleScreen(
-      {super.key, required this.app, required this.components, required this.services, required this.ruleConfig});
+      {super.key, required this.app, required this.components, required this.services, required this.ruleConfig, required this.ruleIndex, required this.callback});
 
   @override
   State<ConfigureRuleScreen> createState() {
@@ -42,13 +45,27 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
 
   void _setCameraState(int index) {
     setState(() {
-      _camerasState[index] = !_camerasState[index];    
+      _camerasState[index] = !_camerasState[index];
+      if (_camerasState[index]) {
+            widget.ruleConfig['cameras'].add(_cameras[index]);
+      }
+      else {
+            widget.ruleConfig['cameras'].removeAt(widget.ruleConfig['cameras'].indexOf(_cameras[index]));
+      }
     });
   }
   void _setVisionsState(int index) {
     setState(() {
       for (int i = 0; i < _visionsState.length; i++) {
         _visionsState[i] = (i == index) ? true : false;
+        if (_visionsState[i]) {
+          if (widget.ruleConfig['type'] == 'detection') {
+            widget.ruleConfig['detector'] = _visions[i];
+          }
+          else {
+            widget.ruleConfig['classifier'] = _visions[i];
+          }
+        }
       } 
     });
   }
@@ -87,6 +104,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
 
   @override
   void dispose() {
+    widget.callback(widget.ruleIndex, widget.ruleConfig);
     super.dispose();
   }
 
@@ -114,7 +132,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                       const SizedBox(width: 25, height: 25),
                     ]),
                     onTap: () async {
-                      //await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
+                      await widget.callback(widget.ruleIndex, widget.ruleConfig, true);
                       Navigator.pop(context);
                 }),
                 (widget.ruleConfig['type'] == 'time') ? 
@@ -135,10 +153,10 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                             value: value,
                             child: Text(value.toString()),
                           );
-                        }).toList(),
-                        onChanged: (int? newValue) {
-                        setState(() {
-                          widget.ruleConfig['ranges'][index]['start_hour'] = newValue;
+                          }).toList(),
+                          onChanged: (int? newValue) {
+                            setState(() {
+                              widget.ruleConfig['ranges'][index]['start_hour'] = newValue;
                             });
                           },
                         ), 
@@ -151,10 +169,10 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                           value: value,
                           child: Text(value.toString()),
                         );
-                      }).toList(),
-                      onChanged: (int? newValue) {
-                      setState(() {
-                        widget.ruleConfig['ranges'][index]['end_hour'] = newValue;
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            widget.ruleConfig['ranges'][index]['end_hour'] = newValue;
                           });
                         },
                         ),
@@ -225,6 +243,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                         }
                         return null;
                       },
+                      onChanged: (value) => widget.ruleConfig['class_regex'] = value,
                     ),
                     Row( 
                       children: [
@@ -239,10 +258,11 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                       );
                     }).toList(),
                     onChanged: (int? newValue) {
-                    setState(() {
-                      _selectedConfidence = newValue!;
-                        });
-                      },
+                      setState(() {
+                        _selectedConfidence = newValue!;
+                      });
+                      widget.ruleConfig['confidence_pct'] = (newValue! * .01);
+                    },
                     ), 
                     ]
                   ),
