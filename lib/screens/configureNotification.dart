@@ -34,7 +34,18 @@ class _ConfigureNotificationScreenState extends State<ConfigureNotificationScree
   @override
   void initState() {
     super.initState();
+
+    if (widget.notificationIndex == -1) {
+      // default to sms
+      _initType('sms');
+    }
     _isLoaded = true;
+  }
+
+  _initType(type) {
+    setState(() {
+      widget.notificationConfig['type'] = type;
+    });
   }
 
   @override
@@ -70,6 +81,21 @@ class _ConfigureNotificationScreenState extends State<ConfigureNotificationScree
                       await widget.callback(widget.notificationIndex, widget.notificationConfig, true);
                       Navigator.pop(context);
                 }),
+                if (widget.notificationIndex == -1) // new rule
+                  DropdownButton<String>(
+                    key: const Key('type'),
+                    value: widget.notificationConfig['type'],
+                    items: ['sms', 'email', 'webhook_get'].map((String items) {
+                      return DropdownMenuItem(
+                        value: items,
+                        child: Text(items),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _initType(newValue);
+                      });
+                    }),
                 if (widget.notificationConfig['type'] == 'sms')
                   Column( children: [
                     TextFormField(

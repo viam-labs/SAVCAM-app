@@ -43,12 +43,18 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
 
   configureEventCallback(int index, Map updatedEvent, [delete=false]) {
     if (delete) {
+      if(index == -1) { return; }
       widget.emAttributes['events'].removeAt(index);
     }
     else {
-      widget.emAttributes['events'][index] = updatedEvent;
+      if(index == -1) {
+        widget.emAttributes['events'].add(updatedEvent);
+      } else {
+        widget.emAttributes['events'][index] = updatedEvent;
+      }
     }
     widget.callback(widget.emAttributes);
+    Future.delayed(Duration.zero, () => setState(() { }));
   }
 
   Widget? _getConfigureEvent(int index, Map eventConfig) {
@@ -77,10 +83,8 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
                               child: Image.asset('web/icons/plus.png')))),
                   const SizedBox(width: 25),
                 ]),
-                onTap: () async {
-                  //await widget.eventManager.doCommand({'clear_triggered': {'id': widget.dir}});
-                  Navigator.pop(context);
-                }),
+                onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(-1, <String,dynamic>{})!))),
+
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,

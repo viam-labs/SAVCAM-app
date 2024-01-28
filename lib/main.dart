@@ -260,6 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
   configuredEventsCallback(Map emAttributes) {
     PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'] = emAttributes;
     _saveConfig();
+    Future.delayed(Duration.zero, () => setState(() { }));
   }
 
   Widget? _getConfiguredEvents() {

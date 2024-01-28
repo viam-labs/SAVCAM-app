@@ -58,8 +58,18 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
   @override
   void initState() {
     super.initState();
-    _modesState[0] = widget.eventConfig['modes'].contains('home');
-    _modesState[1] = widget.eventConfig['modes'].contains('away');
+    if (widget.eventIndex == -1) {
+      _modesState = [false, false];
+      widget.eventConfig['modes'] = [];
+      widget.eventConfig['rules'] = [];
+      widget.eventConfig['notifications'] = [];
+      widget.eventConfig['debounce_interval_secs'] = 60;
+      widget.eventConfig['rule_logic_type'] = 'AND';
+      widget.eventConfig['name'] = 'newevent';
+    } else {
+      _modesState[0] = widget.eventConfig['modes'].contains('home');
+      _modesState[1] = widget.eventConfig['modes'].contains('away');
+    }
     _isLoaded = true;
   }
 
@@ -70,25 +80,36 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
   }
 
   ruleCallback(int index, Map updatedRule, [delete=false]) {
-    if (delete) {
-      widget.eventConfig['rules'].removeAt(index);
-    }
-    else {
-      widget.eventConfig['rules'][index] = updatedRule;
-    }
-    
+      if (delete) {
+        if(index == -1) { return; }
+        widget.eventConfig['rules'].removeAt(index);
+      }
+      else {
+        if (index == -1) {
+          widget.eventConfig['rules'].add(updatedRule);
+        } else {
+          widget.eventConfig['rules'][index] = updatedRule;
+        }
+      }
     widget.callback(widget.eventIndex, widget.eventConfig);
+    Future.delayed(Duration.zero, () => setState(() { }));
   }
 
   notificationCallback(int index, Map updatedNotification, [delete=false]) {
-    if (delete) {
-      widget.eventConfig['notifications'].removeAt(index);
-    }
-    else {
-      widget.eventConfig['notifications'][index] = updatedNotification;
-    }
-    
+      if (delete) {
+        if(index == -1) { return; }
+        widget.eventConfig['notifications'].removeAt(index);
+      }
+      else {
+        if (index == -1) {
+          widget.eventConfig['notifications'].add(updatedNotification);
+        } else {
+          widget.eventConfig['notifications'][index] = updatedNotification;
+        }
+      }
+
     widget.callback(widget.eventIndex, widget.eventConfig);
+    Future.delayed(Duration.zero, () => setState(() { }));
   }
 
   Widget? _getConfigureRule(int index, Map config) {
@@ -196,13 +217,20 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                       }),
                 ]),
                 const SizedBox(height: 15),
-                const Row(children: [
-                  Expanded(
+                Row(children: [
+                  const Expanded(
                       child: Align(
                           alignment: Alignment.topLeft,
                           child: SizedBox(
                               child:
-                                  Text("Rules:", textAlign: TextAlign.left))))
+                                  Text("Rules:", textAlign: TextAlign.left)))),
+                  
+                 GestureDetector(
+                  child: SizedBox(
+                              height: 24, 
+                              child: Image.asset('web/icons/plus.png') ), 
+                  onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureRule(-1, <String,dynamic>{})!))
+                )
                 ]),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
@@ -234,13 +262,20 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                   padding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 15),
-                const Row(children: [
-                  Expanded(
+                Row(children: [
+                  const Expanded(
                       child: Align(
                           alignment: Alignment.topLeft,
                           child: SizedBox(
                               child:
-                                  Text("Notifications:", textAlign: TextAlign.left))))
+                                  Text("Notifications:", textAlign: TextAlign.left)))),
+                  GestureDetector(
+                    child: SizedBox(
+                              height: 24, 
+                              child: Image.asset('web/icons/plus.png') ), 
+                    onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureNotification(-1, <String,dynamic>{})!))
+
+                )
                 ]),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),

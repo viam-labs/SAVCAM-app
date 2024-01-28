@@ -47,6 +47,9 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
     setState(() {
       _camerasState[index] = !_camerasState[index];
       if (_camerasState[index]) {
+            if(! widget.ruleConfig.containsKey('cameras')) {
+              widget.ruleConfig['cameras'] = [];
+            }
             widget.ruleConfig['cameras'].add(_cameras[index]);
       }
       else {
@@ -76,7 +79,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
     widget.components.forEach((key, value) {
       if ((value['type'] == 'camera') && (value['name'] != dotenv.env['DIR_CAM'])) {
         _cameras.add(key);
-        if ((widget.ruleConfig['type'] != 'time') && (widget.ruleConfig['cameras'].indexOf(key) != -1)) {
+        if ((widget.ruleConfig['type'] != 'time') && widget.ruleConfig.containsKey('cameras') && (widget.ruleConfig['cameras'].indexOf(key) != -1)) {
           _camerasState.add(true);
         } else {
           _camerasState.add(false);
@@ -96,10 +99,28 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
     });
 
     if (widget.ruleConfig['type'] != 'time') {
-      _selectedConfidence = (widget.ruleConfig['confidence_pct'] * 100).toInt();
+      _selectedConfidence = widget.ruleConfig.containsKey('confidence_pct') ? (widget.ruleConfig['confidence_pct'] * 100).toInt() : 50;
+    }
+
+    if (widget.ruleIndex == -1) {
+      // default to time
+      _initType('time');
     }
 
     _isLoaded = true;
+  }
+
+  _initType(type) {
+    setState(() {
+      if (type == 'time') {
+        widget.ruleConfig['ranges'] = [{'start_hour': 0, 'end_hour': 0}];
+      }
+      else {
+        widget.ruleConfig['class_regex'] = '';
+      }
+
+      widget.ruleConfig['type'] = type;
+    });
   }
 
   @override
@@ -135,6 +156,21 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                       await widget.callback(widget.ruleIndex, widget.ruleConfig, true);
                       Navigator.pop(context);
                 }),
+                if (widget.ruleIndex == -1) // new rule
+                  DropdownButton<String>(
+                    key: const Key('type'),
+                    value: widget.ruleConfig['type'],
+                    items: ['time', 'detection', 'classification'].map((String items) {
+                      return DropdownMenuItem(
+                        value: items,
+                        child: Text(items),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _initType(newValue);
+                      });
+                    }),
                 (widget.ruleConfig['type'] == 'time') ? 
                   Column( children: [
                     ListView.builder(
