@@ -230,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
 
         if (PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'].containsKey('mode')) {
-          _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'].containsKey('mode'));
+          _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']['mode']);
         }
         else {
         // default mode to home if not set
