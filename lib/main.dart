@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Timer? timer;
 
-  void _setModeState(String mode, [bool save=false]) {
+  void _setModeState([String mode='home', bool save=false]) {
       if (mode == 'away') {
         ModeState = [false, true];
       } else {
@@ -228,7 +228,14 @@ class _MyHomePageState extends State<MyHomePage> {
           PartServiceMap[service['name']] = service;
           index = index + 1;
         });
-        _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']['mode']);
+
+        if (PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'].containsKey('mode')) {
+          _setModeState(PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'].containsKey('mode'));
+        }
+        else {
+        // default mode to home if not set
+        _setModeState('home', true);
+        }
       });
     });
 
