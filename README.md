@@ -1,6 +1,8 @@
 # SAVCAM (Smart AI Viam Camera) Flutter App
 
-This app uses Viam's Flutter SDK to control a camera set up as a security camera, leveraging the Viam Computer Vision service, allowing for configurable rules that leverage any configured detectors or classifiers (for example, machine learning).
+The SAVCAM app uses Viam's Flutter SDK to control settings for a highly configurable security camera leveraging the Viam Computer Vision service, allowing for configurable rules that use any configured detectors or classifiers (for example, machine learning).
+
+This app provides a way to configure event and notification rules for the [SAVCAM event manager](https://github.com/viam-labs/SAVCAM-event-manager), and provides a front-end to view live camera streams and camera replays of triggered events.
 
 ## Setup
 
