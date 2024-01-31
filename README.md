@@ -99,4 +99,4 @@ flutter run -d macos lib/main.dart
   ![Camera View](screenshots/event_config.png)
 
   - [**Home Screen with Triggered Alert**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/main.dart): Home screen shows the most recent triggered alerts and their video preview.
-  ![Login Screen](screenshots/home_no_alerts.png)
+  ![Login Screen](screenshots/home_with_alert.png)
