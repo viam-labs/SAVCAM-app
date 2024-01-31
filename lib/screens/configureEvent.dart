@@ -15,12 +15,12 @@ import 'screens.dart';
 class ConfigureEventScreen extends StatefulWidget {
   final Viam app;
   final Map eventConfig;
-  final int eventIndex;
+  int eventIndex;
   final Map components;
   final Map services;
   final Function callback;
 
-  const ConfigureEventScreen(
+  ConfigureEventScreen(
       {super.key, required this.callback, required this.app, required this.components, required this.services, required this.eventConfig, required this.eventIndex});
 
   @override
@@ -91,7 +91,9 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
           widget.eventConfig['rules'][index] = updatedRule;
         }
       }
-    widget.callback(widget.eventIndex, widget.eventConfig);
+    var newEventIndex = widget.callback(widget.eventIndex, widget.eventConfig);
+    widget.eventIndex = newEventIndex;
+
     Future.delayed(Duration.zero, () => setState(() { }));
   }
 

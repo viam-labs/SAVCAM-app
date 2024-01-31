@@ -48,13 +48,18 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
     }
     else {
       if(index == -1) {
+        if (! widget.emAttributes.containsKey('events')) {
+          widget.emAttributes['events'] = [];
+        }
         widget.emAttributes['events'].add(updatedEvent);
+        index = 0;
       } else {
         widget.emAttributes['events'][index] = updatedEvent;
       }
     }
     widget.callback(widget.emAttributes);
     Future.delayed(Duration.zero, () => setState(() { }));
+    return index;
   }
 
   Widget? _getConfigureEvent(int index, Map eventConfig) {
@@ -85,31 +90,34 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
                 ]),
                 onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(-1, <String,dynamic>{})!))),
 
-                ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: widget.emAttributes['events'].length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(width: 5, height: 5),
-                        GestureDetector( 
-                          child: const SizedBox(
-                            height: 80,
+                widget.emAttributes.containsKey('events') ?
+                  ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: widget.emAttributes['events'].length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(width: 5, height: 5),
+                          GestureDetector( 
+                            child: const SizedBox(
+                              height: 80,
+                            ),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
                           ),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
-                        ),
-                        PlatformListTile(
-                          title: Text(widget.emAttributes['events'][index]['name']),
-                          trailing: Icon(context.platformIcons.rightChevron),
-                          onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
-                        ),
-                        const Divider(height: 0, indent: 0, endIndent: 0)
-                    ]);
-                  },
-                  padding: EdgeInsets.zero,
-                ),
+                          PlatformListTile(
+                            title: Text(widget.emAttributes['events'][index]['name']),
+                            trailing: Icon(context.platformIcons.rightChevron),
+                            onTap: () => Navigator.push(context, platformPageRoute(context: context, builder: (context) => _getConfigureEvent(index, widget.emAttributes['events'][index])!)),
+                          ),
+                          const Divider(height: 0, indent: 0, endIndent: 0)
+                      ]);
+                    },
+                    padding: EdgeInsets.zero,
+                  ) 
+                  :
+                  const Text('No configured events')
               ] 
           )
         )

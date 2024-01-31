@@ -99,7 +99,12 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
     });
 
     if (widget.ruleConfig['type'] != 'time') {
-      _selectedConfidence = widget.ruleConfig.containsKey('confidence_pct') ? (widget.ruleConfig['confidence_pct'] * 100).toInt() : 50;
+      if (!widget.ruleConfig.containsKey('confidence_pct')) {
+        // default to 50%
+        widget.ruleConfig['confidence_pct'] = .5;
+      }
+
+      _selectedConfidence = (widget.ruleConfig['confidence_pct'] * 100).toInt();
     }
 
     if (widget.ruleIndex == -1) {
