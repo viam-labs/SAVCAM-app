@@ -89,14 +89,14 @@ flutter run -d macos lib/main.dart
 
 ## Screenshots
 
-- [**Home Screen**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/main.dart): Main screen, where you will see a preview of any configured cameras and any triggered alerts.
+- [**Home Screen**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/main.dart): Home screen, where you will see a preview of any configured cameras and any triggered alerts.
   ![Login Screen](screenshots/home_no_alerts.png)
 
 - [**Camera Stream Screen**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/screens/stream.dart): Screen where you can see a live stream from any configured camera.
   ![Camera View](screenshots/camera_view.png)
 
-  - [**Event Configuration Screen**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/screens/configureEvent.dart): Screen where you can see manage configured events.
+  - [**Event Configuration Screen**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/screens/configureEvent.dart): Screen where you can see and manage configured events.
   ![Camera View](screenshots/event_config.png)
 
-  - [**Home Screen with Triggered Alert**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/main.dart): Main screen will also show the most recent triggered alerts and their video preview.
+  - [**Home Screen with Triggered Alert**](https://github.com/viam-labs/SAVCAM-app/tree/main/lib/main.dart): Home screen shows the most recent triggered alerts and their video preview.
   ![Login Screen](screenshots/home_no_alerts.png)
