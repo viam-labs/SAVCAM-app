@@ -130,7 +130,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
 
   @override
   void dispose() {
-    widget.callback(widget.ruleIndex, widget.ruleConfig);
+    widget.callback(widget.ruleIndex, widget.ruleConfig, {...widget.ruleConfig['cameras'], (widget.ruleConfig['type'] == 'detection') ? widget.ruleConfig['detector'] : widget.ruleConfig['classifier']}.toList());
     super.dispose();
   }
 
@@ -158,7 +158,7 @@ class _ConfigureRuleScreenState extends State<ConfigureRuleScreen> {
                       const SizedBox(width: 25, height: 25),
                     ]),
                     onTap: () async {
-                      await widget.callback(widget.ruleIndex, widget.ruleConfig, true);
+                      await widget.callback(widget.ruleIndex, widget.ruleConfig, [], true);
                       Navigator.pop(context);
                 }),
                 if (widget.ruleIndex == -1) // new rule

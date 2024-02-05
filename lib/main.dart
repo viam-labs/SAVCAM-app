@@ -264,14 +264,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  configuredEventsCallback(Map emAttributes) {
+  configuredEventsCallback(Map emAttributes, List emDeps) {
     PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'] = emAttributes;
+    PartComponentMap[dotenv.env['EVENT_MANAGER']]['depends_on'] = emDeps;
     _saveConfig();
     Future.delayed(Duration.zero, () => setState(() { }));
   }
 
   Widget? _getConfiguredEvents() {
-    return ConfiguredEventsScreen(callback: configuredEventsCallback, app: _app, components: PartComponentMap, services: PartServiceMap, emAttributes: PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes']);
+    return ConfiguredEventsScreen(callback: configuredEventsCallback, app: _app, components: PartComponentMap, services: PartServiceMap, emAttributes: PartComponentMap[dotenv.env['EVENT_MANAGER']]['attributes'], emDeps: PartComponentMap[dotenv.env['EVENT_MANAGER']]['depends_on']);
   }
 
   Widget? _getStream(ResourceName rname, String title, [String dir=""]) {

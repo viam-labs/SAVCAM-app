@@ -50,7 +50,7 @@ class _ConfigureNotificationScreenState extends State<ConfigureNotificationScree
 
   @override
   void dispose() {
-    widget.callback(widget.notificationIndex, widget.notificationConfig);
+    widget.callback(widget.notificationIndex, widget.notificationConfig, []);
     super.dispose();
   }
 
@@ -78,7 +78,7 @@ class _ConfigureNotificationScreenState extends State<ConfigureNotificationScree
                       const SizedBox(width: 25, height: 25),
                     ]),
                     onTap: () async {
-                      await widget.callback(widget.notificationIndex, widget.notificationConfig, true);
+                      await widget.callback(widget.notificationIndex, widget.notificationConfig, [], true);
                       Navigator.pop(context);
                 }),
                 if (widget.notificationIndex == -1) // new rule

@@ -17,9 +17,10 @@ class ConfiguredEventsScreen extends StatefulWidget {
   final Map components;
   final Map services;
   final Map emAttributes;
+  List emDeps;
   final Function callback;
 
-  const ConfiguredEventsScreen({super.key, required this.callback, required this.app, required this.components, required this.services, required this.emAttributes});
+  ConfiguredEventsScreen({super.key, required this.callback, required this.app, required this.components, required this.services, required this.emAttributes, required this.emDeps});
 
   @override
   State<ConfiguredEventsScreen> createState() {
@@ -41,7 +42,7 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
     super.dispose();
   }
 
-  configureEventCallback(int index, Map updatedEvent, [delete=false]) {
+  configureEventCallback(int index, Map updatedEvent, List updatedDeps, [delete=false]) {
     if (delete) {
       if(index == -1) { return; }
       widget.emAttributes['events'].removeAt(index);
@@ -56,8 +57,11 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
       } else {
         widget.emAttributes['events'][index] = updatedEvent;
       }
+      // Add deps by merging lists.
+      // Note that we do not currently handle removing deps if an event is deleted.
+      widget.emDeps = {...updatedDeps, ...widget.emDeps}.toList();
     }
-    widget.callback(widget.emAttributes);
+    widget.callback(widget.emAttributes, widget.emDeps);
     Future.delayed(Duration.zero, () => setState(() { }));
     return index;
   }

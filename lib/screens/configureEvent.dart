@@ -77,11 +77,11 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
 
   @override
   void dispose() {
-    widget.callback(widget.eventIndex, widget.eventConfig);
+    widget.callback(widget.eventIndex, widget.eventConfig, []);
     super.dispose();
   }
 
-  ruleCallback(int index, Map updatedRule, [delete=false]) {
+  ruleCallback(int index, Map updatedRule, List depsList, [delete=false]) {
       if (delete) {
         if(index == -1) { return; }
         widget.eventConfig['rules'].removeAt(index);
@@ -93,13 +93,13 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
           widget.eventConfig['rules'][index] = updatedRule;
         }
       }
-    var newEventIndex = widget.callback(widget.eventIndex, widget.eventConfig);
+    var newEventIndex = widget.callback(widget.eventIndex, widget.eventConfig, depsList);
     widget.eventIndex = newEventIndex;
 
     Future.delayed(Duration.zero, () => setState(() { }));
   }
 
-  notificationCallback(int index, Map updatedNotification, [delete=false]) {
+  notificationCallback(int index, Map updatedNotification, List depsList, [delete=false]) {
       if (delete) {
         if(index == -1) { return; }
         widget.eventConfig['notifications'].removeAt(index);
@@ -112,7 +112,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
         }
       }
 
-    widget.callback(widget.eventIndex, widget.eventConfig);
+    widget.callback(widget.eventIndex, widget.eventConfig, depsList);
     Future.delayed(Duration.zero, () => setState(() { }));
   }
 
@@ -148,7 +148,7 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
                       const SizedBox(width: 25, height: 25),
                     ]),
                     onTap: () async {
-                      await widget.callback(widget.eventIndex, widget.eventConfig, true);
+                      await widget.callback(widget.eventIndex, widget.eventConfig, [], true);
                       Navigator.pop(context);
                     }),
                 TextFormField(
