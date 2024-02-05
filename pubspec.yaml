@@ -15,10 +15,12 @@ dependencies:
   flutter_webrtc: ^0.9.35
   image: ^4.0.17
   flutter_dotenv: ^5.1.0
+  viam_sdk:
+    git:
+      url: https://github.com/viamrobotics/viam-flutter-sdk.git
+      ref: main
 
 dependency_overrides:
-  viam_sdk:
-    path: /Users/mcvella/git/viam-flutter-sdk
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

@@ -52,7 +52,7 @@ class _ConfiguredEventsScreenState extends State<ConfiguredEventsScreen> {
           widget.emAttributes['events'] = [];
         }
         widget.emAttributes['events'].add(updatedEvent);
-        index = 0;
+        index = widget.emAttributes['events'].length - 1;
       } else {
         widget.emAttributes['events'][index] = updatedEvent;
       }

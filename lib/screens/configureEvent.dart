@@ -39,19 +39,21 @@ class _ConfigureEventScreenState extends State<ConfigureEventScreen> {
 
   void _setModeState(String mode) {
     setState(() {
-      var modes = [];
       if (mode == 'home') {
         _modesState[0] = !_modesState[0];
         if (_modesState[0]) {
-          modes.add('home');
+          widget.eventConfig['modes'].add('home');
+        } else {
+          widget.eventConfig['modes'].removeWhere((item) => item == 'home') ;
         }
       } else {
         _modesState[1] = !_modesState[1];
         if (_modesState[1]) {
-          modes.add('away');
+          widget.eventConfig['modes'].add('away');
+         } else {
+          widget.eventConfig['modes'].removeWhere((item) => item == 'away') ;
         }
       }
-      widget.eventConfig['modes'] = modes;
     });
   }
 
